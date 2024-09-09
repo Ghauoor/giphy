@@ -1,23 +1,27 @@
-import {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
-import {GifState} from "../context/gif-context";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { GifState } from "../context/gif-context";
 import Gif from "../components/gif";
 import FollowOn from "../components/follow-on";
 
-import {HiOutlineExternalLink} from "react-icons/hi";
-import {HiMiniChevronDown, HiMiniChevronUp, HiMiniHeart} from "react-icons/hi2";
-import {FaPaperPlane} from "react-icons/fa6";
-import {IoCodeSharp} from "react-icons/io5";
+import { HiOutlineExternalLink } from "react-icons/hi";
+import {
+  HiMiniChevronDown,
+  HiMiniChevronUp,
+  HiMiniHeart,
+} from "react-icons/hi2";
+import { FaPaperPlane } from "react-icons/fa6";
+import { IoCodeSharp } from "react-icons/io5";
 
 const contentType = ["gifs", "stickers", "texts"];
 
 const GifPage = () => {
-  const {type, slug} = useParams();
+  const { type, slug } = useParams();
   const [gif, setGif] = useState({});
   const [relatedGifs, setRelatedGifs] = useState([]);
   const [readMore, setReadMore] = useState(false);
 
-  const {gf, addToFavorites, favorites} = GifState();
+  const { gf, addToFavorites, favorites } = GifState();
 
   useEffect(() => {
     if (!contentType.includes(type)) {
@@ -25,8 +29,8 @@ const GifPage = () => {
     }
     const fetchGif = async () => {
       const gifId = slug.split("-");
-      const {data} = await gf.gif(gifId[gifId.length - 1]);
-      const {data: related} = await gf.related(gifId[gifId.length - 1], {
+      const { data } = await gf.gif(gifId[gifId.length - 1]);
+      const { data: related } = await gf.related(gifId[gifId.length - 1], {
         limit: 10,
       });
       setGif(data);
@@ -37,11 +41,35 @@ const GifPage = () => {
   }, []);
 
   const shareGif = () => {
-    // Assignment
+    if (navigator.share) {
+      navigator
+        .share({
+          title: gif.title || "Check out this GIF!",
+          url: window.location.href,
+        })
+        .then(() => console.log("GIF shared successfully!"))
+        .catch((error) => console.error("Error sharing GIF:", error));
+    } else {
+      console.log("Share API not supported in this browser.");
+    }
   };
 
   const EmbedGif = () => {
-    // Assignment
+    const embedCode = `<iframe src="${gif.embed_url}" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="${gif.url}">via GIPHY</a></p>`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(embedCode)
+        .then(() => {
+          console.log("Embed code copied to clipboard!");
+          alert("Embed code copied!");
+        })
+        .catch((error) => {
+          console.error("Error copying embed code:", error);
+        });
+    } else {
+      console.log("Clipboard API not supported in this browser.");
+    }
   };
 
   return (
@@ -89,11 +117,7 @@ const GifPage = () => {
 
         {gif?.source && (
           <div>
-            <span
-              className="faded-text" //custom - faded-text
-            >
-              Source
-            </span>
+            <span className="faded-text">Source</span>
             <div className="flex items-center text-sm font-bold gap-1">
               <HiOutlineExternalLink size={25} />
               <a href={gif.source} target="_blank" className="truncate">
@@ -143,14 +167,14 @@ const GifPage = () => {
               Favorite
             </button>
             <button
-              onClick={shareGif} // Assignment
+              onClick={shareGif}
               className="flex gap-6 items-center font-bold text-lg"
             >
               <FaPaperPlane size={25} />
               Share
             </button>
             <button
-              onClick={EmbedGif} // Assignment
+              onClick={EmbedGif}
               className="flex gap-5 items-center font-bold text-lg"
             >
               <IoCodeSharp size={30} />
